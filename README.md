@@ -341,7 +341,13 @@ Training creates or overwrites checkpoints, ONNX models, and TensorBoard event f
 
 ## Experimental video
 
-[▶ View the experimental video](figures/Video-TRO-Github.mp4)
+<p align="center">
+  <img src="figures/Video-TRO-Github.gif">
+</p>
+
+<p align="center">
+  <a href="figures/Video-TRO-Github.mp4">▶ Watch the full experimental video</a>
+</p>
 
 ## Citation
 
