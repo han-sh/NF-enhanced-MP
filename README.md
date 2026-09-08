@@ -355,7 +355,7 @@ If this code is useful in your research, please cite:
 
 ```bibtex
 @article{TODO,
-  title   = {TODO},
+  title   = {Normalizing Flow-Enhanced Message Passing for Multirobot Collaborative Localization},
   author  = {TODO},
   journal = {IEEE Transactions on Robotics},
   year    = {TODO}
