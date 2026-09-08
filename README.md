@@ -10,6 +10,8 @@ This repository provides the training and evaluation code for **normalizing flow
 ├── Evaluation/
 │   ├── main.py              # BP–MF evaluation
 │   ├── main-BP.py           # BP evaluation
+│   ├── main-R3.py           # BP–MF evaluation in R3
+│   ├── main-BP-R3.py        # BP evaluation in R3
 │   ├── FactorGraph.py       # Factor graph data structures
 │   ├── FactorSolver.py      # Batched MP solver
 │   ├── Factor.py            # Factor parameter containers
@@ -19,6 +21,8 @@ This repository provides the training and evaluation code for **normalizing flow
 └── Training/
     ├── train.py             # Trains proposals for BP–MF
     ├── train-BP.py          # Trains proposals for BP
+    ├── train-R3.py          # Trains proposals for BP–MF in R3
+    ├── train-BP-R3.py       # Trains proposals for BP in R3
     ├── normflow.py          # Conditional RealNVP implementation
     ├── FactorGraph.py       
     ├── FactorSolver.py      
@@ -27,7 +31,9 @@ This repository provides the training and evaluation code for **normalizing flow
     ├── MeasurementModel.py
     ├── Transform.py
     ├── MF-UWB/              # BP–MF ONNX proposals
-    └── BP-UWB/              # BP ONNX proposals
+    |── BP-UWB/              # BP ONNX proposals
+    ├── MF-UWB-R3/           # BP–MF ONNX proposals in R3
+    └── BP-UWB-R3/           # BP ONNX proposals in R3
 ```
 
 ## What the two evaluation entry points do
@@ -54,42 +60,28 @@ The corresponding training scripts follow the same split: `Training/train.py` tr
 
 The code has been tested with:
 
-- Python 3;
-- NumPy;
-- SciPy;
-- Matplotlib;
-- PyTorch;
-- PyTorch3D (training only);
-- TensorBoard (training only);
-- ONNX Runtime (evaluation with `nonlinear_approx_mode = "NN"`).
-
-Dependency versions are not pinned in the current snapshot. Before publishing a reproducible release, add a tested `requirements.txt` or `environment.yml`, including the Python, PyTorch, CUDA, and PyTorch3D versions used for the reported experiments.
+- Python: 3.13.7
+- NumPy: 2.3.3
+- SciPy: 1.16.2
+- Matplotlib: 3.10.6
+- PyTorch: 2.8.0+cu129
+- CUDA used by PyTorch: 12.9
+- TensorBoard: 2.20.0
+- ONNX Runtime: 1.24.2
 
 ## Quick start: evaluation
 
-The evaluation scripts currently contain machine-specific absolute model paths. Before running them, point the model directory to the checkpoints included in this repository. A portable replacement is:
-
-```python
-from pathlib import Path
-
-# Evaluation/main.py
-MODEL_DIR = Path(__file__).resolve().parents[1] / "Training" / "MF-UWB"
-
-# Evaluation/main-BP.py
-MODEL_DIR = Path(__file__).resolve().parents[1] / "Training" / "BP-UWB"
-```
-
-Then use `str(MODEL_DIR / f"uwb_iter{i + 1}.onnx")` when creating each ONNX Runtime session.
-
-Run the scripts from the `Evaluation` directory because the current imports are directory-local:
+Run the scripts from the `Evaluation` directory:
 
 ```bash
 cd Evaluation
 python main.py
 python main-BP.py
+python main-R3.py
+python main-BP-R3.py
 ```
 
-The default configuration uses four robots, 101 states, a three-state sliding window, five message-passing iterations, and 30 Monte Carlo trials. For a quick smoke test, reduce `Times` and `n_state` first.
+The default configuration uses four robots, 101 states, a three-state sliding window, five message-passing iterations, and 30 Monte Carlo trials.
 
 The main experiment settings are defined near the beginning of each entry point:
 
@@ -115,7 +107,7 @@ At each time step, the example performs the following operations:
 4. For the hybrid method, add and update the conjugate variables associated with adaptive odometry and robust UWB noise.
 5. Construct one `fg_solver` per robot for the current sliding-window topology.
 6. Alternate variable-to-factor, MF factor-to-variable, BP factor-to-variable, and cross-robot message updates.
-7. Write the BP beliefs back to the graph, retract pose increments onto the manifold, and use the newest estimates as the next prior.
+7. Write the BP beliefs back to the graph, retract pose increments onto the manifold, and record estimates as priors.
 
 ## Customizing the factor graph
 
@@ -137,28 +129,6 @@ class MySensor:
 ```
 
 For `Lie_Group`, `x` is a list of adjacent `State` objects. In evaluation, an unbatched state stores an orientation of shape `(3, 3)` and a position of shape `(3, 1)`; a batched state stores `(N, 3, 3)` and `(N, 3, 1)`. A factor with residual dimension `m` connected to `q` six-dimensional pose variables must return a batched residual of shape `(N, m, 1)` and a batched Jacobian of shape `(N, m, 6*q)`. The functions should also accept the corresponding unbatched inputs.
-
-For example, the following factor directly observes the position of one Lie-group pose:
-
-```python
-import numpy as np
-
-
-class position_sensor:
-    @staticmethod
-    def model_fcn(x, z, ext_param):
-        return z - x[0].position
-
-    @staticmethod
-    def Jaco_fcn(x, z, ext_param):
-        R = x[0].orientation
-        if R.ndim == 3:
-            batch_size = R.shape[0]
-            zeros = np.zeros((batch_size, 3, 3))
-            minus_eye = -np.repeat(np.eye(3)[None, :, :], batch_size, axis=0)
-            return np.concatenate((zeros, minus_eye), axis=-1)
-        return np.hstack((np.zeros((3, 3)), -np.eye(3)))
-```
 
 When using Lie-group states, `Jaco_fcn` should return the Jacobian with respect to the local right perturbation at the retracted state. The solver applies `composite_rightJaco(...)` to map it to the Gaussian error-state coordinates used internally.
 
@@ -269,8 +239,6 @@ for solver in solvers:
     solver.set_all_BP_factor_belief()
 ```
 
-Rebuild the solver after changing the graph topology; the constructor derives all offsets, batches, and sparse mappings from the current graph.
-
 ## Key interfaces
 
 | Interface | Purpose |
@@ -283,11 +251,22 @@ Rebuild the solver after changing the graph topology; the constructor derives al
 | `MeasurementFactor` | Bind a sensor name, measurement, residual/Jacobian model, covariance, extrinsics, and approximation policy. |
 | `fg_solver.compute_all_BP_var_messages` | Compute all internal BP variable-to-factor messages. |
 | `fg_solver.compute_all_factor_messages_MF` | Compute closed-form MF messages for supported conjugate variables. |
-| `fg_solver.update_all_factor_belief` | Combine the nonlinear gradient term with incoming variable messages. |
+| `fg_solver.update_all_factor_belief` | Update factor belief natural parameters using estimated gradients and incoming variable messages. |
 | `fg_solver.compute_all_factor_messages_BP` | Marginalize batched factor beliefs into BP factor-to-variable messages. |
-| `fg_solver.update_all_var_belief` | Combine incoming BP and MF messages into variable natural parameters. |
+| `fg_solver.update_all_var_belief` | Update variable belief natural parameters using incoming factor messages. |
 | `transfer_var_msg` / `transfer_factor_msg` | Exchange packed cross-robot messages. |
 | `fg_solver.retract_all_BP_var_belief` | Retract Gaussian pose increments and transport their covariance on the manifold. |
+
+## Vectorization mechanism
+
+The solver avoids processing every edge independently during its main numerical updates:
+
+- Natural parameters and BP/MF messages are packed into contiguous column vectors.
+- Factors are grouped by `(sensor_name, natural_parameter_dimension)`.
+- Measurements, Lie-group tangent points, and extrinsic parameters are stacked by sensor type.
+- Sparse mapping matrices gather incoming messages, project factor means and covariances, and support belief updates.
+- Residuals, Jacobians, matrix inversions, Cholesky decompositions, and Monte Carlo samples are evaluated in batches with NumPy during evaluation.
+- The sampling path flattens `number_of_factors x number_of_samples` into one leading dimension, evaluates the sensor model once per batch, and then reshapes the results for averaging.
 
 ## Cache mechanism
 
@@ -309,38 +288,7 @@ print(fg_solver.cache_info())
 fg_solver.clear_cache()
 ```
 
-Use `clear_cache()` before a cold-start benchmark or when intentionally releasing cached layouts. The cache does not persist to disk and does not cache factor beliefs, measurements, learned-model outputs, or inferred messages.
-
-## Vectorization mechanism
-
-The solver avoids processing every edge independently during its main numerical updates:
-
-- Gaussian natural parameters and BP/MF messages are packed into contiguous column vectors.
-- Factors are grouped by `(sensor_name, natural_parameter_dimension)`.
-- Measurements, Lie-group tangent points, and extrinsic parameters are stacked by sensor type.
-- Sparse mapping matrices gather incoming messages, project factor moments, remove cavity messages, and scatter factor messages back to variables.
-- Residuals, Jacobians, matrix inversions, Cholesky decompositions, and Monte Carlo samples are evaluated in batches with NumPy during evaluation.
-- The sampling path flattens `number_of_factors x number_of_samples` into one leading dimension, evaluates the sensor model once per batch, and then reshapes the results for averaging.
-- The training solver adds a leading dataset batch dimension, uses PyTorch operations for automatic differentiation, and can run on CUDA.
-
-Graph construction, some conjugate-message bookkeeping, and cross-robot message transfer still use Python loops. “Vectorized” here refers to the dominant numerical factor/message calculations, not every control-flow operation.
-
-## Solver assumptions that users should review
-
-`FactorSolver.py` is a research solver and contains application-specific assumptions. Before using it in a new problem, verify at least the following:
-
-- accepted strings and dimensions for `state_space`, `nonlinear_approx_mode`, and `BP_MF`;
-- state ordering and Jacobian conventions, especially the right-perturbation convention on `SO(3) x R3`;
-- positive definiteness and numerical conditioning of all covariance/precision matrices;
-- the factor grouping contract: one sensor group must have compatible models, dimensions, and batched data layouts;
-- the learned-proposal condition vector, which is currently specialized to the UWB factor and to the state dimensions used by the example;
-- the number of ONNX models, which must match `max_iteration`;
-- closed-form MF message rules, which are implemented for the specific inverse-Wishart/Beta/Bernoulli/Gamma structures used here;
-- cross-robot ownership and the update order used by `transfer_var_msg` and `transfer_factor_msg`;
-- cache size and memory use for workloads containing many distinct graph topologies;
-- singular or nearly singular cases in normalization, Cholesky decomposition, covariance inversion, and Fisher transforms.
-
-Adding a new Taylor-linearized measurement factor normally requires only a compatible residual/Jacobian and graph construction. Adding a learned proposal for a new sensor, a new MF distribution, a different state manifold, or a different message schedule will generally require changes inside the solver.
+Use `clear_cache()` when intentionally releasing cached layouts. The cache does not persist to disk and does not cache factor beliefs, measurements, learned-model outputs, or inferred messages.
 
 ## Training
 
@@ -350,28 +298,43 @@ Run training from the `Training` directory:
 cd Training
 python train.py
 python train-BP.py
+python train-R3.py
+python train-BP-R3.py
 ```
 
 The scripts generate synthetic data, start TensorBoard on port 6006, unroll inference, optimize iteration-specific conditional RealNVP models, save `checkpoint.pth`, and export `uwb_iter1.onnx` through `uwb_iter5.onnx`.
 
 Training can be computationally and memory intensive. Review `batch_size`, `data_size`, `n_state`, `iteration_num`, `sample_num`, and `train_interval` before running. Also verify that port 6006 is available and that the installed PyTorch/PyTorch3D builds match the local CPU or CUDA environment.
 
+## Solver assumptions that users should review
+
+`FactorSolver.py` is a research solver and contains application-specific assumptions. Before using it in a new problem, verify at least the following:
+
+- state ordering and Jacobian conventions, especially the right-perturbation convention on `SO(3) x R3`;
+- the learned-proposal condition vector, which is currently specialized to the UWB factor and to the state dimensions used by the example;
+- closed-form MF message rules, which are implemented for the specific inverse-Wishart/Beta/Bernoulli/Gamma structures used here;
+- cross-robot ownership and the update order used by `transfer_var_msg` and `transfer_factor_msg`;
+
+Adding a new measurement factor normally requires only a compatible residual/Jacobian and graph construction. Adding a learned proposal for a new sensor, a new MF distribution, a different state manifold, or a different message schedule will generally require changes inside the solver.
+
+To better emulate distributed multi-robot operation, the evaluation code constructs a separate factor graph and solver for each robot and explicitly implements inter-robot message exchange. When the factor graph is solved on a single compute unit, this structure can be simplified to a single factor graph and solver. The training code adopts this implementation.
+
 ## Outputs
 
 Evaluation creates:
 
-- `plotdata-MF-<mode>.npz` for the hybrid BP–MF method;
-- `plotdata-BP-<mode>.npz` for the BP baseline;
+- `plotdata-MF-<mode>.npz` for BP–MF in SO(3) x R3 test;
+- `plotdata-BP-<mode>.npz` for BP in SO(3) x R3 test;
+- `plotdata-MF-<mode>-R3.npz` for BP–MF in R3 test;
+- `plotdata-BP-<mode>-R3.npz` for BP in R3 test;
 - printed average runtime and orientation/position ARMSE;
 - Matplotlib RMSE figures.
 
-Training creates or overwrites checkpoints, ONNX models, and TensorBoard event files in its output directory. Preserve the exact released models used for any published table or figure.
+Training creates or overwrites checkpoints, ONNX models, and TensorBoard event files in its output directory.
 
 ## Experimental video
 
-> **Video placeholder:** add the experimental video, thumbnail, and a one-sentence description here.
-
-https://github.com/han-sh/NF-enhanced-MP/issues/1#issue-5388960236
+[https://github.com/han-sh/NF-enhanced-MP/issues/1#issue-5388960236](https://github.com/user-attachments/assets/48148f01-cbac-4bc3-9c3e-c8101ee3391c)
 
 ## Citation
 
@@ -388,4 +351,4 @@ If this code is useful in your research, please cite:
 
 ## License
 
-No license is declared in the current snapshot. Add the selected open-source license here and include the corresponding `LICENSE` file before publishing.
+No license is declared in the current snapshot.
