@@ -1,34 +1,33 @@
 # NF-enhanced-MP
 
-This repository provides training and evaluation code for learning-accelerated, distributed factor-graph inference for multi-robot cooperative localization. The example combines odometry, GNSS, and inter-robot UWB measurements on either `SO(3) x R3` error states or Euclidean states. It supports belief propagation (BP), a hybrid BP–mean-field (BP–MF) formulation, Taylor linearization, Monte Carlo sampling, and learned normalizing-flow proposals.
+This repository provides the training and evaluation code for **normalizing flow-enhanced parametric message passing (MP)** for distributed multi-robot cooperative localization. The framework unifies Gaussian belief propagation (GBP) for state estimation with mean-field (MF) inference for adaptive noise estimation, while directly operating in the natural parameter space of beliefs. Nonlinear and non-conjugate factors can be handled using Taylor linearization, Monte Carlo sampling, or a **learnable normalizing flow gradient estimator trained end-to-end with the MP algorithm**. The provided examples fuse odometry, GNSS, and inter-robot UWB measurements, supporting both Euclidean states and `SO(3) x R3` error states.
 
-> Replace `[Project Name]` and the citation placeholders before publishing.
 
 ## Repository structure
 
 ```text
 .
 ├── Evaluation/
-│   ├── main.py              # Hybrid BP–MF evaluation
-│   ├── main-BP.py           # BP-only baseline evaluation
-│   ├── FactorGraph.py       # Factor/variable graph data structures
-│   ├── FactorSolver.py      # Batched message-passing solver
+│   ├── main.py              # BP–MF evaluation
+│   ├── main-BP.py           # BP evaluation
+│   ├── FactorGraph.py       # Factor graph data structures
+│   ├── FactorSolver.py      # Batched MP solver
 │   ├── Factor.py            # Factor parameter containers
-│   ├── Distribution.py      # Gaussian and conjugate distributions
+│   ├── Distribution.py      # Exponential family distributions
 │   ├── MeasurementModel.py  # Prior, odometry, GNSS, and UWB models
 │   └── Transform.py         # SO(3) x R3 state operations and Jacobians
 └── Training/
-    ├── train.py             # Trains proposals for the hybrid BP–MF method
-    ├── train-BP.py          # Trains proposals for the BP-only baseline
+    ├── train.py             # Trains proposals for BP–MF
+    ├── train-BP.py          # Trains proposals for BP
     ├── normflow.py          # Conditional RealNVP implementation
-    ├── FactorGraph.py       # Differentiable PyTorch graph implementation
-    ├── FactorSolver.py      # Differentiable batched solver
+    ├── FactorGraph.py       
+    ├── FactorSolver.py      
     ├── Factor.py
     ├── Distribution.py
     ├── MeasurementModel.py
     ├── Transform.py
-    ├── MF-UWB/              # Hybrid BP–MF checkpoints and ONNX proposals
-    └── BP-UWB/              # BP baseline checkpoints and ONNX proposals
+    ├── MF-UWB/              # BP–MF ONNX proposals
+    └── BP-UWB/              # BP ONNX proposals
 ```
 
 ## What the two evaluation entry points do
@@ -42,18 +41,18 @@ This repository provides training and evaluation code for learning-accelerated, 
 - each robot owns a local factor graph;
 - cross-robot UWB factors exchange messages between local graphs;
 - a sliding window removes old states and factors;
-- nonlinear UWB updates can use Taylor expansion, ordinary sampling, or a learned ONNX proposal;
+- gradient updates associated with nonlinear UWB ranging can use Taylor expansion, Monto Carlo sampling, or normalizing flow;
 - the script reports runtime and orientation/position ARMSE, saves an `.npz` result, and plots RMSE curves.
 
 ### `Evaluation/main-BP.py`
 
 `main-BP.py` is the BP-only comparison. It uses the same simulated trajectories, sensors, sliding-window structure, distributed message transfers, nonlinear approximation choices, and evaluation metrics, but keeps the nominal measurement covariances fixed and omits the MF noise variables used for adaptive/robust inference. Its output file is named `plotdata-BP-<mode>.npz`, whereas the hybrid script writes `plotdata-MF-<mode>.npz`.
 
-The corresponding training scripts follow the same split: `Training/train.py` trains the hybrid BP–MF UWB proposals, and `Training/train-BP.py` trains the BP baseline proposals. Both unroll factor-graph inference in PyTorch and export one ONNX proposal per solver iteration.
+The corresponding training scripts follow the same split: `Training/train.py` trains the hybrid BP–MF, and `Training/train-BP.py` trains the BP. Both unroll factor-graph inference in PyTorch and export one ONNX proposal per solver iteration.
 
 ## Requirements
 
-The code currently depends on:
+The code has been tested with:
 
 - Python 3;
 - NumPy;
