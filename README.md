@@ -1,8 +1,13 @@
-![figFramework](figures/figFramework.pdf)
-
 # NF-enhanced-MP
 
-This repository provides the training and evaluation code for **normalizing flow-enhanced parametric message passing (MP)** for distributed multi-robot cooperative localization. The framework unifies Gaussian belief propagation (GBP) for state estimation with mean-field (MF) inference for adaptive noise estimation, while directly operating in the natural parameter space of beliefs. Nonlinear and non-conjugate factors can be handled using Taylor linearization, Monte Carlo sampling, or a **learnable normalizing flow gradient estimator trained end-to-end with the MP algorithm**. The provided examples fuse odometry, GNSS, and inter-robot UWB measurements, supporting both Euclidean states and `SO(3) x R3` error states.
+This repository provides the training and evaluation code for **normalizing flow-enhanced parametric message passing (MP)** for distributed multi-robot cooperative localization. The framework unifies Gaussian belief propagation (GBP) for state estimation with mean-field (MF) inference for adaptive noise estimation, while directly operating in the natural parameter space of beliefs. Nonlinear and non-conjugate factors can be handled using Taylor linearization, Monte Carlo sampling, or a **learnable normalizing flow gradient estimator trained end-to-end with the MP algorithm**.
+
+![Framework](figures/figFramework.png)
+
+The provided examples fuse odometry, GNSS, and inter-robot UWB measurements, supporting both Euclidean states and `SO(3) x R3` error states. Please see below figure.
+
+![FactorGraph](figures/figFactorGraph.png)
+
 
 
 ## Repository structure
