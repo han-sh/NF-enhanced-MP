@@ -371,7 +371,7 @@ Training creates or overwrites checkpoints, ONNX models, and TensorBoard event f
 
 > **Video placeholder:** add the experimental video, thumbnail, and a one-sentence description here.
 
-<!-- Example: [Watch the experimental demonstration](https://your-video-url.example) -->
+https://github.com/han-sh/NF-enhanced-MP/issues/1#issue-5388960236
 
 ## Citation
 
