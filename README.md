@@ -341,7 +341,7 @@ Training creates or overwrites checkpoints, ONNX models, and TensorBoard event f
 
 ## Experimental video
 
-[https://github.com/han-sh/NF-enhanced-MP/issues/1#issue-5388960236](https://github.com/user-attachments/assets/48148f01-cbac-4bc3-9c3e-c8101ee3391c)
+[▶ View the experimental video](figures/Video-TRO-Github.mp4)
 
 ## Citation
 
