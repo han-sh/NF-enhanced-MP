@@ -54,7 +54,7 @@ The provided examples fuse odometry, GNSS, and inter-robot UWB measurements, sup
 - each robot owns a local factor graph;
 - cross-robot UWB factors exchange messages between local graphs;
 - a sliding window removes old states and factors;
-- gradient updates associated with nonlinear UWB ranging can use Taylor expansion, Monto Carlo sampling, or normalizing flow;
+- gradient updates associated with nonlinear UWB ranging can use Taylor expansion, Monte Carlo sampling, or normalizing flow;
 - the script reports runtime and orientation/position ARMSE, saves an `.npz` result, and plots RMSE curves.
 
 ### `Evaluation/main-BP.py`
