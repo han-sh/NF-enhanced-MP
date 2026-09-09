@@ -88,7 +88,7 @@ python main-R3.py
 python main-BP-R3.py
 ```
 
-The default configuration uses four robots, 101 states, a three-state sliding window, five message-passing iterations, and 30 Monte Carlo trials.
+The default configuration uses four robots, 101 states, a three-state sliding window, five message-passing iterations. The default R3 experiments use 50 Monte Carlo trials, whereas the Lie-group experiments use 30.
 
 The main experiment settings are defined near the beginning of each entry point:
 
