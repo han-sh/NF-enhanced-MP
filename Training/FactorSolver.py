@@ -243,13 +243,13 @@ class fg_solver:
 
     @staticmethod
     def _expectation_parameter_projection(factor, var, mean_offsets, dim, dima, device):
-        """The returned matrix Lbar extracts the selected variable's expectation parmater from the factor's expectation parmater:
+        """The returned matrix Lbar extracts the selected variable's expectation parameter from the factor's expectation parameter:
 
-            variable expectation parmater = Lbar @ factor expectation parmater
+            variable expectation parameter = Lbar @ factor expectation parameter
 
         ----------
-        dim: Length of the variable's expectation parmater
-        dima: Length of the factor's expectation parmater.
+        dim: Length of the variable's expectation parameter
+        dima: Length of the factor's expectation parameter.
         """
 
         dim_factor_mean = factor.belief.mean.shape[1]
