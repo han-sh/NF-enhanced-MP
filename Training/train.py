@@ -143,7 +143,7 @@ def main():
     url = tb.launch()
     print(f"TensorBoard started at {url}")
 
-    # Training configuration. These values are unchanged from the source code.
+    # Training configuration.
     dim_state = 6
     n_state = 100
     window_size = 3
@@ -351,7 +351,6 @@ def main():
                     net.train()
 
             if k == 1 or k % train_interval == 0:
-                # Start a new truncated backpropagation interval.
                 savedata = {
                 "x": [[[None for _ in range(n_robot)] for _ in range(train_interval)] for _ in range(max_iteration)],
                 "x_esti": [[[None for _ in range(n_robot)] for _ in range(train_interval)] for _ in range(max_iteration)],
@@ -528,7 +527,7 @@ def main():
             x_prior[k] = x_esti[-1]
             cov_prior[:, k] = cov_esti[:, -1]
 
-            # Backpropagate once at the end of each truncated interval.
+            # Backpropagate.
             if (k + 1) % train_interval == 0:
                 optimizer.zero_grad()
 

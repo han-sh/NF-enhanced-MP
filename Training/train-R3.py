@@ -82,7 +82,7 @@ def main():
     url = tb.launch()
     print(f"TensorBoard started at {url}")
 
-    # Training configuration. These values are unchanged from the source code.
+    # Training configuration.
     dim_state = 3
     n_state = 100
     window_size = 3
@@ -258,7 +258,6 @@ def main():
                     net.train()
 
             if k == 1 or k % train_interval == 0:
-                # Start a new truncated backpropagation interval.
                 savedata = {
                 "x": torch.zeros(max_iteration, batch_size, train_interval, n_robot, dim_state, 1, dtype=torch.float32, device=device),
                 "x_esti": torch.zeros(max_iteration, batch_size, train_interval, n_robot, dim_state, 1, dtype=torch.float32, device=device),
@@ -399,7 +398,7 @@ def main():
             x_prior[:, k] = x_esti[:, -1].clone()
             cov_prior[:, k] = cov_esti[:, -1].clone()
 
-            # Backpropagate once at the end of each truncated interval.
+            # Backpropagate.
             if (k + 1) % train_interval == 0:
                 optimizer.zero_grad()
 
