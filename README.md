@@ -1,10 +1,15 @@
 # NF-enhanced-MP
 
+![Python](https://img.shields.io/badge/Python-3.13.7-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.8.0-orange)
+![PyTorch3D](https://img.shields.io/badge/PyTorch3D-0.7.9-blue)
+![CUDA](https://img.shields.io/badge/CUDA-12.9-green)
+
 This repository provides the training and evaluation code for **normalizing flow-enhanced parametric message passing (MP)** for distributed multi-robot cooperative localization. The framework unifies Gaussian belief propagation (GBP) for state estimation with mean-field (MF) inference for adaptive noise estimation, while directly operating in the natural parameter space of beliefs. Nonlinear and non-conjugate factors can be handled using Taylor linearization, Monte Carlo sampling, or a **learnable normalizing flow gradient estimator trained end-to-end with the MP algorithm**.
 
 ![Framework](figures/figFramework.png)
 
-The provided examples fuse odometry, GNSS, and inter-robot UWB measurements, supporting both Euclidean states and `SO(3) x R3` error states. Please see below figure.
+The provided examples fuse odometry, GNSS, and inter-robot UWB measurements, supporting both Euclidean states and `SO(3) x R3` error states. The corresponding factor graph is shown below.
 
 ![FactorGraph](figures/figFactorGraph.png)
 
@@ -38,12 +43,12 @@ The provided examples fuse odometry, GNSS, and inter-robot UWB measurements, sup
     ├── MeasurementModel.py
     ├── Transform.py
     ├── MF-UWB/              # BP–MF ONNX proposals
-    |── BP-UWB/              # BP ONNX proposals
+    ├── BP-UWB/              # BP ONNX proposals
     ├── MF-UWB-R3/           # BP–MF ONNX proposals in R3
     └── BP-UWB-R3/           # BP ONNX proposals in R3
 ```
 
-## What the two evaluation entry points do
+## Evaluation entry points
 
 ### `Evaluation/main.py`
 
@@ -63,6 +68,10 @@ The provided examples fuse odometry, GNSS, and inter-robot UWB measurements, sup
 
 The corresponding training scripts follow the same split: `Training/train.py` trains the hybrid BP–MF, and `Training/train-BP.py` trains the BP. Both unroll factor-graph inference in PyTorch and export one ONNX proposal per solver iteration.
 
+### `Evaluation/main-R3.py` and `Evaluation/main-BP-R3.py`
+
+`main-R3.py` and `main-BP-R3.py` provide the corresponding BP–MF and BP-only evaluations in Euclidean R3 space.
+
 ## Requirements
 
 The code has been tested with:
@@ -72,6 +81,7 @@ The code has been tested with:
 - SciPy: 1.16.2
 - Matplotlib: 3.10.6
 - PyTorch: 2.8.0+cu129
+- PyTorch3D: 0.7.9
 - CUDA used by PyTorch: 12.9
 - TensorBoard: 2.20.0
 - ONNX Runtime: 1.24.2
@@ -364,4 +374,4 @@ If this code is useful in your research, please cite:
 
 ## License
 
-No license is declared in the current snapshot.
+This project is released under the MIT License.
