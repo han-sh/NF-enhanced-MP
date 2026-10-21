@@ -157,7 +157,7 @@ def main():
                     factor_param = MeasurementFactor("prior", x_prior[k+1-window_size, n], prior_R3, cov_prior[k+1-window_size, n], None, True)
                     fg_list[n].add_factor_node(factor_name, [var_name], factor_param, NN)
                 
-                # Delete UWB noise parameters and factors that have left the window.
+                # Delete UWB factors that have left the window.
                 for n in range(n_robot):
                     for m in range(n_robot):
                         if not np.isnan(meas["uwb"][k+1-window_size, n, m]):
@@ -165,7 +165,7 @@ def main():
                             fg_list[n].delete_factor_node(factor_name)
                     
             for n in range(n_robot):
-                # Obtain the estimates of odometry covariances.
+                # Use the fixed nominal odometry covariance.
                 P_odo_set = cov["P_odo"]
             
                 # Predict and add the current robot state.
@@ -175,7 +175,7 @@ def main():
                 belief.set_by_Mean_Cov(x_esti[-1, n]+meas["odo"][k, n], cov_esti[-1, n]+P_odo_set)
                 fg_list[n].add_var_node(var_name2, belief, None, k, n+1, "BP")
 
-                # Add odometry factor and its adaptive covariance variable and noise factor.
+                # Add the odometry factor with fixed covariance.
                 factor_name = f"odo{k-1},{k},{n+1}"
                 factor_param = MeasurementFactor("odo", meas["odo"][k, n], odo_R3, P_odo_set, None, True)
                 fg_list[n].add_factor_node(factor_name, [var_name1, var_name2], factor_param, NN)
@@ -186,7 +186,7 @@ def main():
                 factor_param = MeasurementFactor("gnss", meas["gnss"][k, n], gnss_R3, cov["P_gnss"], [ext_param["gnss"]], True)
                 fg_list[n].add_factor_node(factor_name, [var_name], factor_param, NN)
 
-            # Add robust inter-robot UWB factors and their GSTM variables.
+            # Add directed UWB factors with fixed Gaussian noise.
             for n in range(n_robot):
                 for m in range(n_robot):
                     if not np.isnan(meas["uwb"][k, n, m]):
