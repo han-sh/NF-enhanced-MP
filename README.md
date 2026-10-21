@@ -5,7 +5,7 @@
 ![PyTorch3D](https://img.shields.io/badge/PyTorch3D-0.7.9-blue)
 ![CUDA](https://img.shields.io/badge/CUDA-12.9-green)
 
-This repository provides the training and evaluation code for **normalizing flow-enhanced parametric message passing (MP)** for distributed multi-robot cooperative localization. The framework unifies Gaussian belief propagation (GBP) for state estimation with mean-field (MF) inference for adaptive noise estimation, while directly operating in the natural parameter space of beliefs. Nonlinear and non-conjugate factors can be handled using Taylor linearization, Monte Carlo sampling, or a **learnable normalizing flow gradient estimator trained end-to-end with the MP algorithm**.
+This repository provides the training and evaluation code for **normalizing flow-enhanced parametric message passing (MP)** for distributed multi-robot collaborative localization. The framework unifies Gaussian belief propagation (GBP) for state estimation with mean-field (MF) inference for adaptive noise estimation, while directly operating in the natural parameter space of beliefs. Nonlinear and non-conjugate factors can be handled using Taylor linearization, Monte Carlo sampling, or a **learnable normalizing flow gradient estimator trained end-to-end with the MP algorithm**.
 
 ![Framework](figures/figFramework.png)
 
@@ -364,11 +364,11 @@ Training creates or overwrites checkpoints, ONNX models, and TensorBoard event f
 If this code is useful in your research, please cite:
 
 ```bibtex
-@article{TODO,
+@article{shen2026MPNF,
   title   = {Normalizing Flow-Enhanced Message Passing for Multirobot Collaborative Localization},
-  author  = {TODO},
+  author  = {Han Shen, Guanghui Wen, Liangming Chen, and Ming cao},
   journal = {IEEE Transactions on Robotics},
-  year    = {TODO}
+  year    = {2026}
 }
 ```
 
