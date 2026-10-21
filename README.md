@@ -351,13 +351,7 @@ Training creates or overwrites checkpoints, ONNX models, and TensorBoard event f
 
 ## Experimental video
 
-<p align="center">
-  <img src="figures/Video-TRO-Github.gif">
-</p>
-
-<p align="center">
-  <a href="figures/Video-TRO-Github.mp4">▶ Watch the full experimental video</a>
-</p>
+https://github.com/user-attachments/assets/f5433d16-7fa6-4996-90a8-1f5f695f37cb
 
 ## Citation
 
@@ -366,7 +360,7 @@ If this code is useful in your research, please cite:
 ```bibtex
 @article{shen2026MPNF,
   title   = {Normalizing Flow-Enhanced Message Passing for Multirobot Collaborative Localization},
-  author  = {Han Shen, Guanghui Wen, Liangming Chen, and Ming cao},
+  author  = {Han Shen, Guanghui Wen, Liangming Chen, and Ming Cao},
   journal = {IEEE Transactions on Robotics},
   year    = {2026}
 }
