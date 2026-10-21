@@ -273,7 +273,7 @@ def main():
                             fg.delete_factor_node(factor_name)
 
             for n in range(n_robot):
-                # Propagate the adaptive odometry covariance prior.
+                # Use the fixed nominal odometry covariance.
                 P_odo_set = cov["P_odo"]
 
                 # Predict and add the next state variable.
@@ -283,7 +283,7 @@ def main():
                 belief.set_by_Mean_Cov(x_esti[:, -1, n]+meas["odo"][:, k, n], cov_esti[:, -1, n]+P_odo_set)
                 fg.add_var_node(var_name2, belief, None, k, n+1, "BP")
 
-                # Add the odometry covariance variable, prior, and factor.
+                # Add the odometry factor with fixed covariance.
                 factor_name = f"odo{k-1},{k},{n+1}"
                 factor_param = MeasurementFactor("odo", meas["odo"][:, k, n], odo_R3, P_odo_set, None, True)
                 fg.add_factor_node(factor_name, [var_name1, var_name2], factor_param, NN)
@@ -294,7 +294,7 @@ def main():
                 factor_param = MeasurementFactor("gnss", meas["gnss"][:, k, n], gnss_R3, cov["P_gnss"], [ext_param["gnss"]], True)
                 fg.add_factor_node(factor_name, [var_name], factor_param, NN)
 
-            # Add robust directed UWB factors and their MF noise variables.
+            # Add directed UWB factors with fixed Gaussian noise.
             for n in range(n_robot):
                 for m in range(n_robot):
                     if not torch.isnan(meas["uwb"][:, k, n, m]).any():

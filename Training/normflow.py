@@ -60,7 +60,7 @@ class CouplingLayer(nn.Module):
 
 
 class RealNVP(nn.Module):
-    """Conditional normalizing flow and its importance-weight weights."""
+    """Conditional normalizing flow and its importance weights."""
 
     def __init__(self, dim, cond_dim, n_layer, device):
         super().__init__()
@@ -90,7 +90,7 @@ class RealNVP(nn.Module):
         return x, logdet_total
 
     def forward(self, z, cond):
-        """Return proposal samples and importance weight."""
+        """Return proposal samples and log importance weights."""
 
         eps, logdet = self.fwd(z, cond)
         logw = logdet - 0.5 * (torch.sum(eps**2, dim=1) - torch.sum(z**2, dim=1))

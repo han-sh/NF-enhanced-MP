@@ -383,7 +383,7 @@ def main():
                             fg.delete_factor_node(factor_name)
 
             for n in range(n_robot):
-                # Propagate the adaptive odometry covariance prior.
+                # Use the fixed nominal odometry covariance.
                 P_odo_set = cov["P_odo"]
 
                 # Predict and add the next state variable.
@@ -403,7 +403,7 @@ def main():
                 belief.set_by_Mean_Cov(torch.zeros((batch_size, 6, 1),dtype=torch.float32, device=device), pred_cov)
                 fg.add_var_node(var_name2, belief, x_next, k, n + 1, "BP")
 
-                # Add the odometry covariance variable, prior, and factor.
+                # Add the odometry factor with fixed covariance.
                 factor_name = f"odo{k-1},{k},{n+1}"
                 factor_param = MeasurementFactor("odo", meas["odo"][k][n], odo, P_odo_set, None, False)
                 fg.add_factor_node(factor_name, [var_name1, var_name2], factor_param, NN)
@@ -414,7 +414,7 @@ def main():
                 factor_param = MeasurementFactor("gnss", meas["gnss"][:, k, n], gnss, cov["P_gnss"], [ext_param["gnss"]], False)
                 fg.add_factor_node(factor_name, [var_name], factor_param, NN)
 
-            # Add robust directed UWB factors and their MF noise variables.
+            # Add directed UWB factors with fixed Gaussian noise.
             for n in range(n_robot):
                 for m in range(n_robot):
                     if not torch.isnan(meas["uwb"][:, k, n, m]).any():
@@ -425,7 +425,7 @@ def main():
                         factor_param = MeasurementFactor("uwb", meas["uwb"][:, k, n, m], uwb, cov["P_uwb"], [ext_param["uwb"],ext_param["uwb"]], False)
                         fg.add_factor_node(factor_name, [var_name1, var_name2], factor_param, NN)
 
-            # Unroll all BP-MF iterations and retain estimates for the loss.
+            # Unroll all GBP iterations and retain estimates for the loss.
             MP_solver = fg_solver(fg, nonlinear_approx_mode, state_space, sample_num)
 
             for iteration in range(max_iteration):
