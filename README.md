@@ -1,6 +1,6 @@
 # NF-enhanced-MP
 
-**Paper: [Normalizing Flow-Enhanced Message Passing for Multirobot Collaborative Localization](https://arxiv.org/abs/2606.29868)**  
+**Paper: [Normalizing Flow-Enhanced Message Passing for Multirobot Collaborative Localization](https://arxiv.org/abs/2606.29868v2)**  
 *Accepted for publication in IEEE Transactions on Robotics*
 
 [![arXiv](https://img.shields.io/badge/arXiv-2606.29868-b31b1b.svg)](https://arxiv.org/abs/2606.29868)
